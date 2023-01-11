@@ -17,8 +17,8 @@ class LEMemory: public MemoryMapHandler {
         void writeHalfword(uint32_t addr, uint16_t val);
         void writeByte(uint32_t addr, uint8_t val);
 
-        void getStartAddr();
-        void getSize();
+        uint32_t getStartAddr();
+        uint32_t getSize();
      private:
         uint32_t _size;
         uint32_t _baseAddr;

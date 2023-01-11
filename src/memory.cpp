@@ -1,10 +1,11 @@
 #include "memory.hpp"
+#include "emulator_exception.hpp"
 
 LEMemory::LEMemory(uint32_t baseAddr, uint32_t size) : _size(size), _baseAddr(baseAddr) {
     _memoryArray = new uint8_t[_size];    
 }
 
-virtual LEMemory::~LEMemory() {
+LEMemory::~LEMemory() {
     delete[] _memoryArray;
 }
 
@@ -24,12 +25,15 @@ uint16_t LEMemory::readHalfword(uint32_t addr) const {
 }
 
 uint8_t LEMemory::readByte(uint32_t addr) const {
-    return _memoryArray[addr];
+    if(addr >= _baseAddr + _size) {
+        throw EmulatorException("Write exceeded memory size");
+    }
+    return _memoryArray[addr - _baseAddr];
 }
 
 void LEMemory::writeWord(uint32_t addr, uint32_t val) {
-    uint8_t half0 = val & 0xFFFF;
-    uint8_t half1 = (val >> 16) & 0xFFFF;
+    uint16_t half0 = val & 0xFFFF;
+    uint16_t half1 = (val >> 16) & 0xFFFF;
 
     writeHalfword(addr, half0);
     writeHalfword(addr + 2, half1);
@@ -44,14 +48,17 @@ void LEMemory::writeHalfword(uint32_t addr, uint16_t val) {
 }
 
 void LEMemory::writeByte(uint32_t addr, uint8_t val) {
-    _memoryArray[addr] = val;
+    if(addr >= _baseAddr + _size) {
+        throw EmulatorException("Write exceeded memory size");
+    }
+    _memoryArray[addr - _baseAddr] = val;
 }
 
-void LEMemory::getStartAddr() {
+uint32_t LEMemory::getStartAddr() {
     return _baseAddr;
 }
 
-void LEMemory::getSize() {
+uint32_t LEMemory::getSize() {
     return _size;
 }
 

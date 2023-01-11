@@ -7,8 +7,8 @@ class MemoryMapHandler {
     public:
         virtual ~MemoryMapHandler() = default;
 
-        virtual void getStartAddr() = 0;
-        virtual void getSize() = 0;
+        virtual uint32_t getStartAddr() = 0;
+        virtual uint32_t getSize() = 0;
 
         virtual uint32_t readWord(uint32_t addr) const = 0;
         virtual uint16_t readHalfword(uint32_t addr) const = 0;
