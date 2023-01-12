@@ -1,11 +1,10 @@
 ## RISC-V Emulator
 
+![demo.gif](demo.gif)
+
 This project implements a RISC-V emulator that targets the RV32IMA instruction set.
 The emulator fully supports the user (U) and supervisor (S) modes of the RV32 privileged architecture.
-In doing so, it is capable of demonstrating Linux boot with a simple Busybox initramfs image.
-M-mode was not implemented as it is not necessary for a simple Linux demonstration.
-Console I/O is supported through the RISC-V SBI (supervisor binary interface) specification.
-In particular, a ECALL instruction in S-mode is handled by the emulator to implement getchar() and putchar() calls.
+The goal of this project is to demonstrate Linux boot with a simple Busybox initramfs image.
 
 ### Features
  * Supervisor (S) and user (U) modes
