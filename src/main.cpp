@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <fstream>
 #include <ncurses.h>
-#include "memory.hpp"
+#include "basic_memory.hpp"
 #include "mem_map_manager.hpp"
 #include "hart.hpp"
 #include "emulator_exception.hpp"
@@ -29,7 +29,7 @@ void shutdownCallback() {
     isRunning = false;
 }
 
-bool loadMemory(std::string fileName, uint32_t startAddr, LEMemory &memory) {
+bool loadMemory(std::string fileName, uint32_t startAddr, BasicMemory &memory) {
     std::ifstream file(fileName, std::ios::in | std::ios::binary | std::ios::ate);
     if(!file) {
         return false;
@@ -38,7 +38,7 @@ bool loadMemory(std::string fileName, uint32_t startAddr, LEMemory &memory) {
     uint32_t nBytes = file.tellg();
     uint32_t lastAddr = startAddr + nBytes;
 
-    if(startAddr < memory.getStartAddr() || nBytes >= memory.getSize()) {
+    if(startAddr < memory.getBaseAddr() || nBytes >= memory.getSize()) {
         return false;
     }
 
@@ -68,7 +68,7 @@ int main(int argc, const char *argv[]) {
     MemoryMapManager mmap;
 
     // 0x8000000 = 134 MB of memory
-    LEMemory memory(0x80000000, 0x8000000);
+    BasicMemory memory(0x80000000, 0x8000000);
     mmap.registerHandler(memory);
 
     fileName = "linux/Image";

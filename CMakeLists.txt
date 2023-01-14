@@ -12,14 +12,8 @@ endif ()
 
 include_directories(${CURSES_INCLUDE_DIRS})
 
-add_executable(rv32-emulator
-    src/decoder.cpp
-    src/emulator_exception.cpp
-    src/hart.cpp
-    src/main.cpp
-    src/mem_map_manager.cpp
-    src/memory.cpp
-)
+add_executable(rv32-emulator "")
+add_subdirectory(src)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
