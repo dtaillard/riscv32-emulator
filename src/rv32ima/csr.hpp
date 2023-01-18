@@ -6,178 +6,167 @@
 #include "bit_field.hpp"
 #include "emulator_exception.hpp"
 
-enum class CSRAccessType {
+enum class CSRAccessType: uint32_t {
     URW, URO, SRW
 };
 
-class CSRBase {
-public:
-    CSRBase() = delete;
-    
-    virtual CSRBase& operator=(uint32_t value) {
-        this->value = value;
-        return *this;
-    }
-
-    CSRBase& operator|=(uint32_t value) {
-        this->value |= value;
-        return *this;
-    }
-
-    CSRBase& operator&=(uint32_t value) {
-        this->value &= value;
-        return *this;
-    }
-
-    operator uint32_t() {
-        return value;
-    }
-
-    uint32_t getAddress() const { return addr; }
-    uint32_t getValue() const {return value; }
-    void setValue(uint32_t value) { this->value = value; } // assignment operator workaround for now
-    CSRAccessType getAccessType() { return accessType; }
-
-protected:
-    CSRBase(uint32_t value, uint32_t addr, CSRAccessType accessType)
-        : addr(addr), value(value), accessType(accessType) {}
-    
-    const uint32_t addr;
-    uint32_t value;
-    const CSRAccessType accessType;
+enum class CSRAddress: uint32_t {
+    CYCLE = 0xC00,
+    TIME = 0xC01,
+    INSTRET = 0xC02,
+    SSTATUS = 0x100,
+    SIE = 0x104,
+    STVEC = 0x105,
+    SCOUNTEREN = 0x106,
+    SSCRATCH = 0x140,
+    SEPC = 0x141,
+    SCAUSE = 0x142,
+    STVAL = 0x143,
+    SIP = 0x144,
+    SATP = 0x180,
+    CYCLEH = 0xc80,
+    TIMEH = 0xc81,
+    INSTRETH = 0xc82,
 };
 
-struct CSRFile {
-    class Cycle: public CSRBase {
-    public:
-        Cycle() : CSRBase(0, 0xc00, CSRAccessType::URO) {}
-    } cycle;
+struct CSRs {
+    uint32_t cycle;
+    uint32_t cycleh;
+
+    uint32_t time;
+    uint32_t timeh;
+
+    uint32_t instret;
+    uint32_t instreth;
     
-    class Time: public CSRBase {
-    public:
-        Time() : CSRBase(0, 0xc01, CSRAccessType::URO) {}
-    } time;
+    uint32_t sscratch;
+    uint32_t sepc;
+    uint32_t stval;
 
-    struct Instret: public CSRBase {
-        Instret() : CSRBase(0, 0xc02, CSRAccessType::URO) {}
-    } instret;
+    union {
+        uint32_t bits;
 
-    struct Sstatus: public CSRBase {
-        Sstatus() : CSRBase(0, 0x100, CSRAccessType::SRW) {}
-
-        U32BitField<31, 31> sd   {value};
-        U32BitField<19, 19> mxr  {value};
-        U32BitField<18, 18> sum  {value};
-        U32BitField<15, 16> xs   {value};
-        U32BitField<13, 14> fs   {value};
-        U32BitField<9, 10>  vs   {value};
-        U32BitField<8, 8>   spp  {value};
-        U32BitField<6, 6>   ube  {value};
-        U32BitField<5, 5>   spie {value};
-        U32BitField<1, 1>   sie  {value};
+        U32BitField<31, 31>  sd;
+        U32BitField<19, 19>  mxr;
+        U32BitField<18, 18>  sum;
+        U32BitField<15, 16>  xs;
+        U32BitField<13, 14>  fs;
+        U32BitField<9, 10>   vs;
+        U32BitField<8, 8>    spp;
+        U32BitField<6, 6>    ube;
+        U32BitField<5, 5>    spie;
+        U32BitField<1, 1>    sie;
     } sstatus;
 
-    struct Sie: public CSRBase {
-        Sie() : CSRBase(0, 0x104, CSRAccessType::SRW) {}
+    union {
+        uint32_t bits;
 
-        U32BitField<1, 1>   ssie {value};
-        U32BitField<5, 5>   stie {value};
-        U32BitField<9, 9>   seie {value};
+        U32BitField<1, 1>    ssie;
+        U32BitField<5, 5>    stie;
+        U32BitField<9, 9>    seie;
     } sie;
 
-    struct Stvec : public CSRBase {
-        Stvec() : CSRBase(0, 0x105, CSRAccessType::SRW) {}
+    union {
+        uint32_t bits;
 
-        U32BitField<0, 1>   mode {value};
-        U32BitField<2, 31>  base {value};
+        U32BitField<0, 1>    mode;
+        U32BitField<2, 31>   base;
     } stvec;
 
-    // Linux probably never uses this...
-    struct Scounteren : public CSRBase {
-        Scounteren() : CSRBase(0, 0x106, CSRAccessType::SRW) {}
+    union {
+        uint32_t bits;
 
-        U32BitField<0, 0>   cy {value};
-        U32BitField<1, 1>   tm {value};
-        U32BitField<2, 2>   ir {value};
+        U32BitField<0, 0>    cy;
+        U32BitField<1, 1>    tm;
+        U32BitField<2, 2>    ir;
     } scounteren;
 
-    struct Sscratch: public CSRBase {
-        Sscratch() : CSRBase(0, 0x140, CSRAccessType::SRW) {}
-    } sscratch;
+    union {
+        uint32_t bits;
 
-    struct Sepc: public CSRBase {
-        Sepc() : CSRBase(0, 0x141, CSRAccessType::SRW) {}
-    } sepc;
-
-    struct Scause: public CSRBase {
-        Scause() : CSRBase(0, 0x142, CSRAccessType::SRW) {}
-
-        U32BitField<31, 31>   interrupt      {value};
-        U32BitField<0, 30>   exceptionCode  {value};
+        U32BitField<31, 31>  interrupt;
+        U32BitField<0, 30>   exceptionCode;
     } scause;
 
-    struct Stval: public CSRBase {
-        Stval() : CSRBase(0, 0x143, CSRAccessType::SRW) {}
+    union {
+        uint32_t bits;
 
-        Stval& operator=(Stval& other) = delete;
-    } stval;
-
-    struct Sip: public CSRBase {
-        Sip() : CSRBase(0, 0x144, CSRAccessType::SRW) {}
-
-        U32BitField<1, 1>   ssip {value};
-        U32BitField<5, 5>   stip {value};
-        U32BitField<9, 9>   seip {value};
+        U32BitField<1, 1>    ssip;
+        U32BitField<5, 5>    stip;
+        U32BitField<9, 9>    seip;
     } sip;
 
-    struct Satp: public CSRBase {
-        Satp() : CSRBase(0, 0x180, CSRAccessType::SRW) {}
+    union {
+        uint32_t bits;
 
-        U32BitField<0, 21>    ppn  {value};
-        U32BitField<22, 30>   asid {value};
-        U32BitField<31, 31>   mode {value};
+        U32BitField<0, 21>   ppn;
+        U32BitField<22, 30>  asid;
+        U32BitField<31, 31>  mode;
     } satp;
 
-    class CycleH: public CSRBase {
-    public:
-        CycleH() : CSRBase(0, 0xc80, CSRAccessType::URO) {}
-    } cycleh;
-
-    class TimeH: public CSRBase {
-    public:
-        TimeH() : CSRBase(0, 0xc81, CSRAccessType::URO) {}
-    } timeh;
-
-    struct InstretH: public CSRBase {
-        InstretH() : CSRBase(0, 0xc82, CSRAccessType::URO) {}
-    } instreth;
-
-    CSRBase& operator[](uint32_t addr) {
-        if(csrMap.find(addr) == csrMap.end()) {
-            throw EmulatorException("Unknown CSR " + std::to_string(addr));
+    uint32_t& operator[](uint32_t addr) {
+        switch(CSRAddress(addr)) {
+            case CSRAddress::CYCLE:
+                return cycle;
+            case CSRAddress::TIME:
+                return time;
+            case CSRAddress::INSTRET:
+                return instret;
+            case CSRAddress::SSTATUS:
+                return sstatus.bits;
+            case CSRAddress::SIE:
+                return sie.bits;
+            case CSRAddress::STVEC:
+                return stvec.bits;
+            case CSRAddress::SCOUNTEREN:
+                return scounteren.bits;
+            case CSRAddress::SSCRATCH:
+                return sscratch;
+            case CSRAddress::SEPC:
+                return sepc;
+            case CSRAddress::SCAUSE:
+                return scause.bits;
+            case CSRAddress::STVAL:
+                return stval;
+            case CSRAddress::SIP:
+                return sip.bits;
+            case CSRAddress::SATP:
+                return satp.bits;
+            case CSRAddress::CYCLEH:
+                return cycleh;
+            case CSRAddress::TIMEH:
+                return timeh;
+            case CSRAddress::INSTRETH:
+                return instreth;
+            default:
+                throw EmulatorException("Unknown CSR " + std::to_string(addr));
         }
-        return *csrMap[addr];
     }
 
-    protected:
-        std::unordered_map<uint32_t, CSRBase*> csrMap = {{
-            {cycle.getAddress(),        &cycle},
-            {time.getAddress(),         &time},
-            {instret.getAddress(),      &instret},
-            {sstatus.getAddress(),      &sstatus},
-            {sie.getAddress(),          &sie},
-            {stvec.getAddress(),        &stvec},
-            {scounteren.getAddress(),   &scounteren},
-            {sscratch.getAddress(),     &sscratch},
-            {sepc.getAddress(),         &sepc},
-            {scause.getAddress(),       &scause},
-            {stval.getAddress(),        &stval},
-            {sip.getAddress(),          &sip},
-            {satp.getAddress(),         &satp},
-            {cycleh.getAddress(),       &cycleh},
-            {timeh.getAddress(),        &timeh},
-            {instreth.getAddress(),     &instreth},
-        }};
+    static constexpr CSRAccessType getAccessType(uint32_t addr) {
+        switch(CSRAddress(addr)) {
+            case CSRAddress::CYCLE:
+            case CSRAddress::TIME:
+            case CSRAddress::INSTRET:
+            case CSRAddress::CYCLEH:
+            case CSRAddress::TIMEH:
+            case CSRAddress::INSTRETH:
+                return CSRAccessType::URO;
+            case CSRAddress::SSTATUS:
+            case CSRAddress::SIE:
+            case CSRAddress::STVEC:
+            case CSRAddress::SCOUNTEREN:
+            case CSRAddress::SSCRATCH:
+            case CSRAddress::SEPC:
+            case CSRAddress::SCAUSE:
+            case CSRAddress::STVAL:
+            case CSRAddress::SIP:
+            case CSRAddress::SATP:
+                return CSRAccessType::SRW;
+            default:
+                throw EmulatorException("Unknown CSR " + std::to_string(addr));
+        }
+    }
 };
 
 #endif /* __CSR_HPP__ */

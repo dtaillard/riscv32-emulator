@@ -1,44 +1,39 @@
 #include "decoder.hpp"
 #include "emulator_exception.hpp"
 
-using Decoder::Type;
-using Decoder::Opcode;
-
-Type Decoder::getType(uint32_t instr) {
-    InstructionFormat fmt = instr;
-    switch(fmt.opcode) {
+RV32::InstructionType RV32::decodeInstructionType(Instruction instr) {
+    switch(instr.opcode) {
         case 0b0000011: 
-            return Type::LOAD;
+            return InstructionType::LOAD;
         case 0b0100011:
-            return Type::STORE;
+            return InstructionType::STORE;
         case 0b1100011:
-            return Type::BRANCH;
+            return InstructionType::BRANCH;
         case 0b1100111:
         case 0b1101111:
-            return Type::JUMP;
+            return InstructionType::JUMP;
         case 0b0101111:
-            return Type::AMO;
+            return InstructionType::AMO;
         case 0b0010011:
-            return Type::OP_IMM;
+            return InstructionType::OP_IMM;
         case 0b0110011:
-            return Type::OP;
+            return InstructionType::OP;
         case 0b1110011:
-            return Type::SYSTEM;
+            return InstructionType::SYSTEM;
         case 0b0110111:
         case 0b0010111:
-            return Type::OP_UI;
+            return InstructionType::OP_UI;
         case 0b0001111:
-            return Type::OP_FENCE;
+            return InstructionType::OP_FENCE;
         default:
-            throw DecoderException("Unknown instruction type", fmt);
+            throw DecoderException("Unknown instruction ", instr.bits);
     }
 }
 
-Opcode Decoder::getOpcode(uint32_t instr) {
-    switch(getType(instr)) {
-        case Type::LOAD: {
-            InstructionIType fmt = instr;
-            switch(fmt.funct3) {
+RV32::Opcode RV32::decodeOpcode(Instruction instr) {
+    switch(decodeInstructionType(instr)) {
+        case InstructionType::LOAD: {
+            switch(instr.r.funct3) {
                 case 0b000:
                     return Opcode::LB;
                 case 0b001:
@@ -50,12 +45,11 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                 case 0b101:
                     return Opcode::LHU;
                 default:
-                    throw DecoderException("Unknown LOAD instruction", fmt);
+                    throw DecoderException("Unknown LOAD instruction ", instr.bits);
             }
         }
-        case Type::STORE: {
-            InstructionSType fmt = instr;
-            switch(fmt.funct3) {
+        case InstructionType::STORE: {
+            switch(instr.s.funct3) {
                 case 0b000:
                     return Opcode::SB;
                 case 0b001:
@@ -63,12 +57,11 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                 case 0b010:
                     return Opcode::SW;
                 default:
-                    throw DecoderException("Unknown STORE instruction", fmt);
+                    throw DecoderException("Unknown STORE instruction ", instr.bits);
             }
         }
-        case Type::BRANCH: {
-            InstructionBType fmt = instr;
-            switch(fmt.funct3) {
+        case InstructionType::BRANCH: {
+            switch(instr.b.funct3) {
                 case 0b000:
                     return Opcode::BEQ;
                 case 0b001:
@@ -82,24 +75,22 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                 case 0b111:
                     return Opcode::BGEU;
                 default:
-                    throw DecoderException("Unknown BRANCH instruction", fmt);
+                    throw DecoderException("Unknown BRANCH instruction ", instr.bits);
             }
         }
-        case Type::JUMP: {
-            InstructionFormat fmt = instr;
-            switch(fmt.opcode) {
+        case InstructionType::JUMP: {
+            switch(instr.opcode) {
                 case 0b1100111:
                     return Opcode::JALR;
                 case 0b1101111:
                     return Opcode::JAL;
                 default:
-                    throw DecoderException("Unknown JUMP instruction", fmt);
+                    throw DecoderException("Unknown JUMP instruction ", instr.bits);
             } 
         }
-        case Type::AMO: {
-            InstructionRType fmt = instr;
+        case InstructionType::AMO: {
             // Only upper 5 bits of funct7 encode the opcode:
-            switch(fmt.funct7 >> 2) {
+            switch(instr.r.funct7 >> 2) {
                 case 0b00010:
                     return Opcode::LR_W;
                 case 0b00011:
@@ -123,12 +114,11 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                 case 0b11100:
                     return Opcode::AMOMAXU_W;
                 default:
-                    throw DecoderException("Unknown AMO instruction", fmt);
+                    throw DecoderException("Unknown AMO instruction ", instr.bits);
             }
         }
-        case Type::OP_IMM: {
-             InstructionRType fmt = instr;
-             switch(fmt.funct3) {
+        case InstructionType::OP_IMM: {
+             switch(instr.r.funct3) {
                  case 0b000:
                      return Opcode::ADDI;
                  case 0b010:
@@ -144,21 +134,20 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                  case 0b001:
                      return Opcode::SLLI;
                  case 0b101:
-                     if(fmt.funct7 == 0b0000000) {
+                     if(instr.r.funct7 == 0b0000000) {
                          return Opcode::SRLI;
                      } else {
                          return Opcode::SRAI;
                      }
                 default:
-                    throw DecoderException("Unknown OP_IMM instruction", fmt);
+                    throw DecoderException("Unknown OP_IMM instruction ", instr.bits);
              }
         }
-        case Type::OP: {
-            InstructionRType fmt = instr;
-            if((fmt.funct7 & 0b0000001) == 0) {
-                switch(fmt.funct3) {
+        case InstructionType::OP: {
+            if((instr.r.funct7 & 0b0000001) == 0) {
+                switch(instr.r.funct3) {
                     case 0b000:
-                        if(fmt.funct7 == 0b0000000) {
+                        if(instr.r.funct7 == 0b0000000) {
                             return Opcode::ADD;
                         } else {
                             return Opcode::SUB;
@@ -172,7 +161,7 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                     case 0b100:
                         return Opcode::XOR;
                     case 0b101:
-                        if(fmt.funct7 == 0b0000000) {
+                        if(instr.r.funct7 == 0b0000000) {
                             return Opcode::SRL;
                         } else {
                             return Opcode::SRA;
@@ -182,10 +171,10 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                     case 0b111:
                         return Opcode::AND;
                     default:
-                        throw DecoderException("Unknown OP instruction", fmt);
+                        throw DecoderException("Unknown OP instruction ", instr.bits);
                 }
             } else {
-                switch(fmt.funct3) {
+                switch(instr.r.funct3) {
                     case 0b000:
                         return Opcode::MUL;
                     case 0b001:
@@ -203,17 +192,14 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                     case 0b111:
                         return Opcode::REMU;
                     default:
-                        throw DecoderException("Unknown M-extension instruction", fmt);
+                        throw DecoderException("Unknown M-extension instruction ", instr.bits);
                 }
             }
         }
-        case Type::SYSTEM: {
-            InstructionIType fmt = instr;
-            InstructionRType fmtR = instr;
-
-            switch(fmt.funct3) {
+        case InstructionType::SYSTEM: {
+            switch(instr.i.funct3) {
                 case 0b000:
-                    switch(fmt.getImmediateValue()) {
+                    switch(instr.i.immediateValue()) {
                         case 0x000:
                             return Opcode::ECALL;
                         case 0x001:
@@ -223,13 +209,13 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                         case 0x105:
                             return Opcode::WFI;
                         default:
-                            switch(fmtR.funct7) {
+                            switch(instr.r.funct7) {
                                 case 0b0001001:
                                     return Opcode::SFENCE_VMA;
                                 case 0b0001011:
                                     return Opcode::SINVAL_VMA;
                                 case 0b0001100:
-                                    if(fmtR.rs2 == 0b00000) {
+                                    if(instr.r.rs2 == 0b00000) {
                                         return Opcode::SFENCE_W_INVAL;
                                     } else {
                                         return Opcode::SFENCE_INVAL_IR;
@@ -249,29 +235,27 @@ Opcode Decoder::getOpcode(uint32_t instr) {
                 case 0b111:
                     return Opcode::CSRRCI;
                 default:
-                    throw DecoderException("Unknown SYSTEM instruction", fmt);
+                    throw DecoderException("Unknown SYSTEM instruction ", instr.bits);
             }
         }
-        case Type::OP_UI: {
-            InstructionFormat fmt = instr;
-            switch(fmt.opcode) {
+        case InstructionType::OP_UI: {
+            switch(instr.opcode) {
                 case 0b0110111:
                     return Opcode::LUI;
                 case 0b0010111:
                     return Opcode::AUIPC;
                 default:
-                    throw DecoderException("Unknown OP_UI instruction", fmt);
+                    throw DecoderException("Unknown OP_UI instruction ", instr.bits);
             }
         }
-        case Type::OP_FENCE: {
-            InstructionIType fmt = instr;
-            switch(fmt.funct3) {
+        case InstructionType::OP_FENCE: {
+            switch(instr.i.funct3) {
                 case 0b000:
                     return Opcode::FENCE;
                 case 0b001:
                     return Opcode::FENCE_I;
                 default:
-                    throw DecoderException("Unknown OP_FENCE instruction", fmt);
+                    throw DecoderException("Unknown OP_FENCE instruction ", instr.bits);
             }
         }
     }

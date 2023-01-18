@@ -6,28 +6,21 @@
 
 template <typename T, size_t BEGIN, size_t END>
 struct BitField {
-    T& bits;
+    T bits;
 
-    BitField(T& value): bits(value) {}
-    BitField(const BitField& other) = default;
-    // BitField(BitField&& other) = default;
-
-    operator T() const {
-        return (bits >> BEGIN) & ((1ULL << _size) - 1);
+    constexpr operator T() const {
+        return (bits >> BEGIN) & ((1ULL << SIZE) - 1);
     }
 
-    BitField& operator=(T other) {
-        T mask = ((1ULL << _size) - 1) << BEGIN;
+    constexpr BitField& operator=(T other) {
+        T mask = ((1ULL << SIZE) - 1) << BEGIN;
         bits = (bits & ~mask) | ((other << BEGIN) & mask);
         return *this;
     }
 
-    BitField& operator=(const BitField& other) {
-        this->bits = other.bits;
-        return *this;
-    }
+    BitField& operator=(const BitField& other) = delete;
 
-    static constexpr size_t _size = END - BEGIN + 1;
+    static constexpr size_t SIZE = END - BEGIN + 1;
 };
 
 template<size_t BEGIN, size_t END>

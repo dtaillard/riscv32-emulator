@@ -2,23 +2,22 @@
 #define __DECODER_HPP__
 
 #include <string>
-#include "instruction_type.hpp"
+#include "instruction.hpp"
 
-namespace Decoder {
+namespace RV32 {
     enum class Opcode;
-    enum class Type;
+    enum class InstructionType;
 
-    Opcode getOpcode(uint32_t instr);
-    Type getType(uint32_t instr);
-    std::string getString(uint32_t instr);
+    Opcode decodeOpcode(Instruction instr);
+    InstructionType decodeInstructionType(Instruction instr);
 };
 
-enum class Decoder::Type {
+enum class RV32::InstructionType {
     LOAD, STORE, BRANCH, JUMP, AMO,
     OP_IMM, OP, SYSTEM, OP_UI, OP_FENCE
 };
 
-enum class Decoder::Opcode {
+enum class RV32::Opcode {
     // RV32I Base //
     LUI, AUIPC, JAL, JALR, BEQ, BNE, BLT, BGE, BLTU,
     BGEU, LB, LH, LW, LBU, LHU, SB, SH, SW, ADDI, SLTI,

@@ -89,10 +89,17 @@ int main(int argc, const char *argv[]) {
         return -1;
     }
 
-    HartRV32 hart(0x80400000, mmap, timebaseFreq, putCharCallback, getCharCallback, shutdownCallback);
+    RV32::HartConfig config = {
+        .timebaseFreq = timebaseFreq,
+        .shutdownCallback = shutdownCallback,
+        .putCharCallback = putCharCallback,
+        .getCharCallback = getCharCallback,
+    };
+
+    RV32::Hart hart(0x80400000, mmap, config);
 
     // put DTB address in a1 for kernel
-    hart.getRegisterFile().setRegister(11, 0x87000000);
+    hart.getRegisters().a1 = 0x87000000;
 
     initCurses();
 
