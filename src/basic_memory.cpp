@@ -2,12 +2,7 @@
 #include "emulator_exception.hpp"
 #include <cassert>
 
-BasicMemory::BasicMemory(uint32_t baseAddr, uint32_t size) : MemoryMapHandler(baseAddr, size) {
-    memoryArray = new uint8_t[size];    
-}
-
-BasicMemory::~BasicMemory() {
-    delete[] memoryArray;
+BasicMemory::BasicMemory(uint32_t baseAddr, uint32_t size) : MemoryMapHandler(baseAddr, size), memoryArray(std::make_unique<uint8_t[]>(size)) {
 }
 
 uint8_t BasicMemory::readByte(uint32_t addr) const {
