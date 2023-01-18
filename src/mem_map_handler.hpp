@@ -14,8 +14,8 @@ class MemoryMapHandler {
         virtual uint32_t getBaseAddr() const = 0;
         virtual uint32_t getSize() const = 0;
     protected:
-        uint32_t baseAddr;
-        uint32_t size;
+        const uint32_t baseAddr;
+        const uint32_t size;
 };
 
 #endif /* __MEM_MAP_HANDLER_HPP__ */

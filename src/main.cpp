@@ -10,14 +10,14 @@
 
 static bool isRunning = true;
 
-void putCharCallback(char c) {
+void emulatorPutchar(char c) {
     if(c == '\n') {
-        std::cout << '\r';
+        std::cout << '\r' << std::flush;
     }
-    std::cout << c << std::flush;
+    std::cout << c;
 }
 
-char getCharCallback() {
+char emulatorGetchar() {
     char c = getch();
     if(c == EOF) {
         return -1;
@@ -25,7 +25,7 @@ char getCharCallback() {
     return c;
 }
 
-void shutdownCallback() {
+void emulatorShutdown() {
     isRunning = false;
 }
 
@@ -91,9 +91,9 @@ int main(int argc, const char *argv[]) {
 
     RV32::HartConfig config = {
         .timebaseFreq = timebaseFreq,
-        .shutdownCallback = shutdownCallback,
-        .putCharCallback = putCharCallback,
-        .getCharCallback = getCharCallback,
+        .shutdownCallback = emulatorShutdown,
+        .putCharCallback = emulatorPutchar,
+        .getCharCallback = emulatorGetchar,
     };
 
     RV32::Hart hart(0x80400000, mmap, config);

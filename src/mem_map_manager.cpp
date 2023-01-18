@@ -53,4 +53,3 @@ MemoryMapHandler& MemoryMapManager::getHandler(uint32_t addr) {
 void MemoryMapManager::registerHandler(MemoryMapHandler& handler) {
     handlers.push_back(&handler);
 }
-

@@ -6,7 +6,9 @@
 #include "instruction.hpp"
 #include <iostream>
 
-using namespace RV32;
+using RV32::Hart;
+using RV32::InstructionType;
+using RV32::Opcode;
 
 Hart::Hart(uint32_t pc, MemoryMapManager &mem, const HartConfig& hartConfig):
     pc(pc), mem(mem), hartConfig(hartConfig), lastTime(std::chrono::system_clock::now()), timebasePeriod(SECONDS_TO_NANSECONDS * (1.0 / hartConfig.timebaseFreq)) {
@@ -625,27 +627,27 @@ void Hart::incrementCounters() {
 }
 
 void Hart::handleException(ExceptionCode code, uint32_t stval) {
-        csr.sstatus.spp = supervisorMode;
-        csr.sstatus.spie = csr.sstatus.sie;
-        supervisorMode = true;
+    csr.sstatus.spp = supervisorMode;
+    csr.sstatus.spie = csr.sstatus.sie;
+    supervisorMode = true;
 
-        csr.sstatus.sie = 0; // Clear sie
+    csr.sstatus.sie = 0; // Clear sie
 
-        // Write to sepc
-        csr.sepc = pc;
+    // Write to sepc
+    csr.sepc = pc;
 
-        // Write exception code
-        csr.scause.exceptionCode = static_cast<uint32_t>(code);
+    // Write exception code
+    csr.scause.exceptionCode = static_cast<uint32_t>(code);
 
-        // This is not an interrupt
-        csr.scause.interrupt = 0;
+    // This is not an interrupt
+    csr.scause.interrupt = 0;
 
-        // Write to stval
-        csr.stval = stval;
+    // Write to stval
+    csr.stval = stval;
 
-        // Set the PC
-        pc = (csr.stvec.base << 2);
-        shouldIncrementPC = false;
+    // Set the PC
+    pc = (csr.stvec.base << 2);
+    shouldIncrementPC = false;
 }
 
 void Hart::handleInterrupts() {
