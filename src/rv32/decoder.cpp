@@ -26,7 +26,7 @@ RV32::InstructionType RV32::decodeInstructionType(Instruction instr) {
         case 0b0001111:
             return InstructionType::OP_FENCE;
         default:
-            throw DecoderException("Unknown instruction ", instr.bits);
+            throw DecoderException("Unknown instruction ", instr);
     }
 }
 
@@ -45,7 +45,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                 case 0b101:
                     return Opcode::LHU;
                 default:
-                    throw DecoderException("Unknown LOAD instruction ", instr.bits);
+                    throw DecoderException("Unknown LOAD instruction ", instr);
             }
         }
         case InstructionType::STORE: {
@@ -57,7 +57,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                 case 0b010:
                     return Opcode::SW;
                 default:
-                    throw DecoderException("Unknown STORE instruction ", instr.bits);
+                    throw DecoderException("Unknown STORE instruction ", instr);
             }
         }
         case InstructionType::BRANCH: {
@@ -75,7 +75,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                 case 0b111:
                     return Opcode::BGEU;
                 default:
-                    throw DecoderException("Unknown BRANCH instruction ", instr.bits);
+                    throw DecoderException("Unknown BRANCH instruction ", instr);
             }
         }
         case InstructionType::JUMP: {
@@ -85,7 +85,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                 case 0b1101111:
                     return Opcode::JAL;
                 default:
-                    throw DecoderException("Unknown JUMP instruction ", instr.bits);
+                    throw DecoderException("Unknown JUMP instruction ", instr);
             } 
         }
         case InstructionType::AMO: {
@@ -114,7 +114,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                 case 0b11100:
                     return Opcode::AMOMAXU_W;
                 default:
-                    throw DecoderException("Unknown AMO instruction ", instr.bits);
+                    throw DecoderException("Unknown AMO instruction ", instr);
             }
         }
         case InstructionType::OP_IMM: {
@@ -140,7 +140,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                          return Opcode::SRAI;
                      }
                 default:
-                    throw DecoderException("Unknown OP_IMM instruction ", instr.bits);
+                    throw DecoderException("Unknown OP_IMM instruction ", instr);
              }
         }
         case InstructionType::OP: {
@@ -171,7 +171,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                     case 0b111:
                         return Opcode::AND;
                     default:
-                        throw DecoderException("Unknown OP instruction ", instr.bits);
+                        throw DecoderException("Unknown OP instruction ", instr);
                 }
             } else {
                 switch(instr.r.funct3) {
@@ -192,7 +192,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                     case 0b111:
                         return Opcode::REMU;
                     default:
-                        throw DecoderException("Unknown M-extension instruction ", instr.bits);
+                        throw DecoderException("Unknown M-extension instruction ", instr);
                 }
             }
         }
@@ -235,7 +235,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                 case 0b111:
                     return Opcode::CSRRCI;
                 default:
-                    throw DecoderException("Unknown SYSTEM instruction ", instr.bits);
+                    throw DecoderException("Unknown SYSTEM instruction ", instr);
             }
         }
         case InstructionType::OP_UI: {
@@ -245,7 +245,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                 case 0b0010111:
                     return Opcode::AUIPC;
                 default:
-                    throw DecoderException("Unknown OP_UI instruction ", instr.bits);
+                    throw DecoderException("Unknown OP_UI instruction ", instr);
             }
         }
         case InstructionType::OP_FENCE: {
@@ -255,7 +255,7 @@ RV32::Opcode RV32::decodeOpcode(Instruction instr) {
                 case 0b001:
                     return Opcode::FENCE_I;
                 default:
-                    throw DecoderException("Unknown OP_FENCE instruction ", instr.bits);
+                    throw DecoderException("Unknown OP_FENCE instruction ", instr);
             }
         }
     }

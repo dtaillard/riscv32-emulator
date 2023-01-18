@@ -1,4 +1,4 @@
-add_subdirectory(rv32ima)
+add_subdirectory(rv32)
 
 target_sources(rv32-emulator PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/basic_memory.cpp"

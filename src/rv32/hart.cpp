@@ -1,6 +1,6 @@
 #include "hart.hpp"
 #include "emulator_exception.hpp"
-#include "instruction_type.hpp"
+#include "instruction.hpp"
 #include "decoder.hpp"
 #include "vmem.hpp"
 #include "instruction.hpp"
